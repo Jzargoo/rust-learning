@@ -1,7 +1,7 @@
 
 use crate::entities::entity::Entity;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct User {
     id: u64,
     pub name: String,

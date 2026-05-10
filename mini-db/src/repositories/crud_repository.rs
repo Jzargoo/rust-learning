@@ -7,7 +7,7 @@ pub trait CrudRepository<T: Entity> {
     fn find_all(&self) -> Vec<T> {
         return vec![];
     }
-
+    
     fn save(&mut self, entity: T) -> Result<T, RepoError>;
     fn exists_by_id(&self, id: T::Id) -> bool;
     fn find_by_id(&self, id: T::Id) -> Option<T>;

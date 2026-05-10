@@ -8,10 +8,6 @@ use entities::entity::Entity;
 
 use crate::repositories::repo_error::RepoError;
 
-#[cfg(test)]
-mod tests{
-    mod in_memory_repo_test;
-}
 
 fn main() -> Result<(), RepoError>{
     let mut user = User::new(
@@ -56,9 +52,4 @@ fn main() -> Result<(), RepoError>{
     repo.delete_by_id(4)?;
 
     Result::Ok(())
-}
-
-
-pub fn array_test(n: usize){
-    let a: [u64; 100000100000100000]  = [0; 100000100000100000];
 }
