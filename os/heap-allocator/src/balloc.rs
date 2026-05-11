@@ -1,5 +1,6 @@
-use std::{alloc::GlobalAlloc, cell::UnsafeCell, ptr::{null, null_mut}, sync::atomic::{AtomicPtr, AtomicUsize}};
+use std::{alloc::GlobalAlloc, ptr::null_mut, sync::atomic::{AtomicPtr, AtomicUsize, Ordering}};
 use std::ffi::c_void;
+
 
 const HEAP_SIZE:usize = 16 * 1024; //16KB
 
@@ -27,7 +28,20 @@ unsafe impl Sync for Balloc {}
 
 unsafe impl GlobalAlloc for Balloc {
     unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
-        todo!()
+        
+        // INIT STAGE
+        if self.heap_size.load(Ordering::Relaxed) == 0 {
+            if let Some(balloc) = Balloc::init() {
+                self.apply(balloc);   
+            } else {
+                return null_mut();
+            }
+        };
+        
+        return null_mut();
+
+        
+
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: std::alloc::Layout) {
@@ -44,13 +58,14 @@ impl Balloc {
             overall_allocated_bytes:AtomicUsize::new(0)
          }
     }
-    pub fn init() -> Self {
+
+    pub fn init() -> Option<Self> {
         let void_ptr = unsafe {
            sbrk(HEAP_SIZE as isize) 
         };
 
         if void_ptr as isize == -1 {
-            panic!("AAAAAAAAAAAAAAAA!")
+            Option::None
         } else {
             
             let raw_ptr: *mut Node = void_ptr as *mut Node;
@@ -67,12 +82,42 @@ impl Balloc {
                 ); 
             }
 
-            Self { 
+            let balloc = Self { 
                 heap_start: unsafe { AtomicPtr::new(raw_ptr.read().address) }, 
                 heap_size: AtomicUsize::new(HEAP_SIZE), 
-                node: AtomicPtr::new(raw_ptr), overall_allocated_bytes: AtomicUsize::new(0)
-             }
+                node: unsafe { AtomicPtr::new(&mut raw_ptr.read()) },
+                overall_allocated_bytes: AtomicUsize::new(0)
+             };
+
+            Option::Some(balloc)
         }
         
+    }
+
+    pub fn apply(&self, balloc: Balloc) {
+        
+        self.heap_size
+            .store(
+                balloc.heap_size.load(Ordering::SeqCst),
+                Ordering::SeqCst
+            ); 
+        
+        self.heap_start
+            .store(
+                balloc.heap_start.load(Ordering::SeqCst),
+                Ordering::SeqCst
+            ); 
+        
+        self.overall_allocated_bytes
+            .store(
+                0,
+                Ordering::SeqCst
+            );
+        self.node
+            .store(
+                balloc.node.load(Ordering::SeqCst),
+                Ordering::SeqCst
+            );
+
     }
 }
