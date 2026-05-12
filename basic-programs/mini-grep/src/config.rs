@@ -10,16 +10,15 @@ impl Config {
             query: query
         }
     }
-}
 
-pub fn parse_config(args: &[String]) -> Result<Config, &str>{
-    
-    if args.len() != 3 {
-        return Err("a program must be provided with 3 arguments, use mini-grep ./path (string searching for) ");
+
+    pub fn parse_config(args: &[String]) -> Result<Self, &str>{
+        if args.len() != 3 {
+            return Err("a program must be provided with 3 arguments, use mini-grep ./path (string searching for) ");
+        }
+
+        let path = args[1].clone();
+        let query = args[2].clone();
+        Ok(Config::build(path, query))
     }
-
-    let path = args[1].clone();
-    let query = args[2].clone();
-
-    Ok(Config::build(path, query))
 }

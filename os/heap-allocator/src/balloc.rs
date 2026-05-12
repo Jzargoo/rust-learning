@@ -1,6 +1,8 @@
 use std::{alloc::GlobalAlloc, ptr::null_mut, sync::atomic::{AtomicPtr, AtomicUsize, Ordering}};
 use std::ffi::c_void;
 
+use crate::metadata::{footer_t, header_t};
+
 
 const HEAP_SIZE:usize = 16 * 1024; //16KB
 
@@ -10,7 +12,7 @@ unsafe extern "C" {
 }
 
 struct Node {
-    size: u32,
+    size: usize,
     address: *mut u8,
     node: *mut Node
 }
@@ -38,10 +40,23 @@ unsafe impl GlobalAlloc for Balloc {
             }
         };
         
+        let mut curr_node = self.node.load(Ordering::SeqCst);
+
+        while !curr_node.is_null() {
+            let align = layout.align_to(16);
+            
+            if align.is_err() { break; } 
+
+            let aligned = align.unwrap();
+
+            if (*curr_node).size >= (aligned.size() + size_of::<header_t>() + size_of::<footer_t>()) {
+                cur
+            } 
+
+            curr_node = (*curr_node).node;
+        }
+
         return null_mut();
-
-        
-
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: std::alloc::Layout) {
@@ -71,7 +86,7 @@ impl Balloc {
             let raw_ptr: *mut Node = void_ptr as *mut Node;
             
             let first_node = Node {
-                size: (HEAP_SIZE - size_of::<Node>()) as u32,
+                size: (HEAP_SIZE - size_of::<Node>()) as usize,
                 address: unsafe {raw_ptr.add(1) as *mut u8},
                 node: null_mut()
             };
