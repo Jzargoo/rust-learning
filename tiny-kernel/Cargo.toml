@@ -1,0 +1,11 @@
+[package]
+name = "tiny-kernel"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Thanks god that there is 9 version(not freaky weird 11 version)
+bootloader = "0.9"
+x86_64 ="0.15.4"
+[profile.dev]
+panic="abort"
