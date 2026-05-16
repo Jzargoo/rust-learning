@@ -6,6 +6,6 @@ edition = "2024"
 [dependencies]
 # Thanks god that there is 9 version(not freaky weird 11 version)
 bootloader = "0.9"
-x86_64 ="0.15.4"
+volatile = "0.2.6"
 [profile.dev]
 panic="abort"

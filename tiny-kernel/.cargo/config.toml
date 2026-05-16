@@ -1,7 +1,12 @@
 [unstable]
 bindeps = true
 
+[build]
+target = "x86_64-unknown-none"
 
 [target.x86_64-unknown-none] 
 runner = "bootimage runner"
 rustflags = ["-C", "link-arg=-Ttext=0x200000"]
+
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"
