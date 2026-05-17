@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "tiny-kernel"
+]
+resolver = "2"

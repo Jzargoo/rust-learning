@@ -1,3 +1,5 @@
+use core::fmt;
+
 use crate::vga::color_code::ColorCode;
 use crate::vga::printable_char::PrintableChar;
 use crate::vga::vga_buffer;
@@ -44,12 +46,7 @@ impl Writer {
         );
 
         if self.column_offset == 0 {
-            if self.raw_offset == 0 {
-                self.accessible=false;
-            } else {
-                self.raw_offset -= 1;
-                self.column_offset = vga_buffer::BUFFER_WIDTH_INDEX;
-            }
+            self.new_line();
         } else {
             self.column_offset -= 1;
         }
@@ -59,10 +56,15 @@ impl Writer {
     }
 
     pub fn new_line(&mut self){
-        todo!()
+        if self.raw_offset == 0 {
+            self.accessible = false;
+        } else {
+            self.raw_offset -=1;
+            self.column_offset = vga_buffer::BUFFER_WIDTH_INDEX;
+        }
     }
 
-    pub fn write_string(&mut self,query :&str) {
+    pub fn write_string(&mut self,query :&str){
         for &byte in query.as_bytes() {
             let res = match byte {
                 0x20..=0x7e| b'\n'=> {self.write_byte(byte)},
@@ -72,5 +74,12 @@ impl Writer {
                 break;
             }
         }
+    }
+}
+
+impl fmt::Write for Writer {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        self.write_string(s);
+        Ok(())
     }
 }
